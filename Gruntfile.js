@@ -1,26 +1,75 @@
 module.exports = function(grunt) {
 
+  var ics_dir = '.';
+  var filesaver_dir = './node_modules/file-saver';
+  var blob_dir = './node_modules/blob';
+
   grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-    concat: {
-      options: {
-        separator: ';'
+    config: {
+      ics: {
+        dir: ics_dir,
+        src: ics_dir+'/ics.js',
+        pkg: grunt.file.readJSON(ics_dir+'/package.json')
       },
-      dist: {
-        src: ['bower_components/Blob.js/Blob.js', 'bower_components/FileSaver/dist/FileSaver.js', 'ics.js'],
-        dest: 'ics.deps.min.js'
+      filesaver: {
+        dir: filesaver_dir,
+        src: filesaver_dir+'/dist/FileSaver.js',
+        pkg: grunt.file.readJSON(filesaver_dir+'/package.json')
+      },
+      blob: {
+        dir: blob_dir,
+        src: blob_dir+'/Blob.js',
+        pkg: grunt.file.readJSON(blob_dir+'/package.json')
+      }
+    },
+    concat: {
+      ics: {
+        options: {
+          separator: ';\n\n',
+          banner: '/*! <%= config.ics.pkg.name %> <%= config.ics.pkg.version %> <%= grunt.template.today() %> */\n'
+        },
+        files: {
+          'build/ics.js': ['<%= config.ics.src %>']
+        }
+      },
+      ics_deps: {
+        options: {
+          separator: ';\n\n',
+          banner: '/*! <%= config.ics.pkg.name %> <%= config.ics.pkg.version %> <%= grunt.template.today() %> */\n' +
+                  '/*! <%= config.filesaver.pkg.name %> <%= config.filesaver.pkg.version %> <%= grunt.template.today() %> */\n' +
+                  '/*! <%= config.blob.pkg.name %> <%= config.blob.pkg.version %> <%= grunt.template.today() %> */\n\n'
+        },
+        files: {
+          'build/ics.deps.js': ['<%= config.ics.src %>', '<%= config.filesaver.src %>', '<%= config.blob.src %>']
+        }
       }
     },
     uglify: {
-      options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today() %> */\n'
-      },
-      dist: {
+      ics: {
+        options: {
+          banner: '/*! <%= config.ics.pkg.name %> <%= config.ics.pkg.version %> <%= grunt.template.today() %> */\n\n'
+        },
         files: {
-          'ics.min.js': ['ics.js'],
-          'ics.deps.min.js': ['ics.deps.min.js'] 
+          'build/ics.min.js': ['build/ics.js'] 
+        }
+      },
+      ics_deps: {
+        options: {
+        banner: '/*! <%= config.ics.pkg.name %> <%= config.ics.pkg.version %> <%= grunt.template.today() %> */\n' +
+                '/*! <%= config.filesaver.pkg.name %> <%= config.filesaver.pkg.version %> <%= grunt.template.today() %> */\n' +
+                '/*! <%= config.blob.pkg.name %> <%= config.blob.pkg.version %> <%= grunt.template.today() %> */\n\n'        },
+        files: {
+          'build/ics.deps.min.js': ['build/ics.deps.js'] 
         }
       }
+    },
+    copy: {
+      to_demo: {
+        files: [{
+          src: 'build/ics.deps.js',
+          dest: 'demo/ics.deps.js'
+        }]
+      }    
     },
     mocha: {
         all: {
@@ -56,9 +105,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+
 
   grunt.registerTask('test', ['jshint', 'mocha']);
 
-  grunt.registerTask('default', ['jshint', 'mocha', 'concat', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'mocha', 'concat:ics', 'uglify:ics', 'concat:ics_deps', 'uglify:ics_deps', 'copy:to_demo']);
 
 };
