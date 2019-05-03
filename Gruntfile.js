@@ -67,7 +67,7 @@ module.exports = function(grunt) {
       to_demo: {
         files: [{
           src: 'build/ics.deps.js',
-          dest: 'demo/ics.deps.js'
+          dest: 'demo/ics.deps.min.js'
         }]
       }    
     },
